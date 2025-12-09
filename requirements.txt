@@ -1,4 +1,3 @@
 fastapi
-mangum
-requests
-bs4
+uvicorn
+pydantic
