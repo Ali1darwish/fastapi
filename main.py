@@ -2,9 +2,10 @@ from fastapi import FastAPI
 
 app = FastAPI()
 
-@app.get("/hi")
-async def get_things():
-    return {"hi there": "hihhhhhhhhhhhhhhhhh"}
+@app.get("/)
+async def get_things(name):
+    return {"hi there": name}
+
 
 
 
