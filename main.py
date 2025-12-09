@@ -4,7 +4,8 @@ from fastapi import FastAPI
 app = FastAPI()
 
 @app.get('/{name}')
-async def get_things():
+async def get_things(name: str):
     return {f'hello': '{name} is that you''}
+
 
 
