@@ -1,16 +1,24 @@
 from pytubefix import YouTube
-from pytubefix.cli import on_progress
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
+import requests
 
+app = FastAPI()
 
-app= FastAPI()
-@app.get("/")
-def get(url: str):
+@app.get("/audio")
+def stream_youtube_audio(url: str):
     try:
         yt = YouTube(url)
+        # نجيب أفضل stream للصوت
         stream = yt.streams.get_audio_only()
-        i = stream.download()
-        return StreamingResponse(r.iter_content(chunk_size=1024*512), media_type="video/mp4a")
+        audio_url = stream.url  # ده رابط مباشر للصوت على سيرفر YouTube
+
+        # نعمل request ستريم للرابط
+        r = requests.get(audio_url, stream=True)
+        return StreamingResponse(
+            r.iter_content(chunk_size=1024*512),
+            media_type="audio/mpeg"
+        )
+
     except Exception as e:
-        print(f"An error occurred: {e}")
+        return {"error": str(e)}
