@@ -1,23 +1,39 @@
-from pytubefix import YouTube
+import time
 from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
-import requests
+from fastapi.responses import FileResponse
+from pytubefix import YouTube
+import os
+import tempfile
+import threading
 
 app = FastAPI()
 
-@app.get("/audio")
-def stream_youtube_audio(url: str):
+def remove_file_later(path: str, delay: int = 50):
+    time.sleep(delay)
+    if os.path.exists(path):
+        os.remove(path)
+
+@app.get("/download")
+def download_audio(url: str):
     try:
         yt = YouTube(url)
-        # نجيب أفضل stream للصوت
         stream = yt.streams.get_audio_only()
-        audio_url = stream.url  # ده رابط مباشر للصوت على سيرفر YouTube
-
-        # نعمل request ستريم للرابط
-        r = requests.get(audio_url, stream=True)
-        return StreamingResponse(
-            r.iter_content(chunk_size=1024*512),
-            media_type="audio/mpeg"
+        
+        # ملف مؤقت
+        temp_dir = tempfile.gettempdir()
+        temp_file_path = os.path.join(temp_dir, "temp.mp3")
+        
+        # تحميل الملف مؤقتًا
+        stream.download(filename="temp.mp3", output_path=temp_dir)
+        
+        # تشغيل thread لحذف الملف بعد فترة
+        threading.Thread(target=remove_file_later, args=(temp_file_path, 60), daemon=True).start()
+        
+        # ارسال الملف للمستخدم
+        return FileResponse(
+            temp_file_path,
+            media_type="audio/mpeg",
+            filename="temp.mp3"
         )
 
     except Exception as e:
